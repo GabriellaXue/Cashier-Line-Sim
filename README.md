@@ -1,8 +1,9 @@
 # Cashier-Line-Sim
 
 ## Test the program
-   - ```
+   - example
+   ```
       g++ -o test main.cpp -std=c++11
-      ./test < input.txt
+      ./test < tests/input1.txt
 
      ```
