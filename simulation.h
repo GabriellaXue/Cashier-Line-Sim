@@ -50,7 +50,13 @@ class Simulation {
          */
         vector<pair<int, string> > regQueue_;
 
+        /**
+         * Track the customer sequence in each lines.
+         * The register number is the key,
+         * and the queue of customers in line is the value.
+         */
         map<int, queue<Customer> > regMap_;
+
         /**
          * Generate unique id for each customer.
          * @return A customer id.
@@ -59,8 +65,9 @@ class Simulation {
 
         /**
          * Output simulation info.
+         * @param num a time integer.
          */
-        void printInfo();
+        void printInfo(int num);
 
         /**
          * Customers waiting to be served at the same time.
@@ -92,9 +99,16 @@ class Simulation {
         int partition(vector<Customer> &toSort, int start, int end, int pivotIdx);
 
         /**
-         * TODO: ?
+         * Enqueue customer according to the type requirement.
+         * @param tmpList current customer list within the same timestamp
          */
         void processService(list<Customer> tmpList);
+
+        /**
+         * Check the time in each register line and output the longest one.
+         * @return return the longest time.
+         */
+        int checkTime();
 
     public:
         /**

@@ -101,18 +101,40 @@ int Simulation::simulate() {
         processService(tmpList);
         tmpList.clear();
     }
-    for (auto it = regMap_.begin(); it != regMap_.end(); it++) {
-        cout << "register number " << it->first << endl;
-        cout << "The queue: " << endl;
-        while(!it->second.empty()) {
-            Simulation::Customer curr = it->second.front(); 
-            cout << curr.type << " " << curr.arrivalT << " " << curr.itemNum << endl;
-            it->second.pop();
-        }
-    }
-    return 1;
+    return checkTime();
 }
 
+/**
+ * Check the time in each register line and output the longest one.
+ * @return return the longest time.
+ */
+int Simulation::checkTime() {
+    int longestTime = 0;
+    for (auto it = regMap_.begin(); it != regMap_.end(); it ++) {
+        queue<Customer> toCheck = it->second;
+        Simulation::Customer currCustomer = toCheck.front();
+        int begin = currCustomer.arrivalT;
+        begin += currCustomer.processingT;
+        toCheck.pop();
+        while(!toCheck.empty()) {
+            currCustomer = toCheck.front();
+            if (begin >= currCustomer.arrivalT) {
+            } else {
+                begin = currCustomer.arrivalT;
+            }
+            begin += currCustomer.processingT;
+            toCheck.pop();
+        }
+        longestTime = (longestTime < begin) ? begin : longestTime;
+    }
+    printInfo(longestTime);
+    return longestTime;
+}
+
+/**
+ * Enqueue customer according to the type requirement.
+ * @param tmpList current customer list within the same timestamp
+ */
 void Simulation::processService(list<Simulation::Customer> tmpList) {
     for (auto customer : tmpList) {
         pair<int, string> bestPos = regQueue_.front();
@@ -133,6 +155,7 @@ void Simulation::processService(list<Simulation::Customer> tmpList) {
                 customer.waitNum = 0;
                 regMap_[toInt].push(customer);
                 bestPos.first++;
+                sort_heap(regQueue_.begin(), regQueue_.end());
             } else {
                 int minItem = 0;
                 int bestLine = numRegister_;
@@ -154,6 +177,7 @@ void Simulation::processService(list<Simulation::Customer> tmpList) {
                 for (int i = 0; i < regQueue_.size(); i++) {
                     if (regQueue_[i].second.compare(std::to_string(bestLine)) == 0) {
                         regQueue_[i].first ++;
+                        sort_heap(regQueue_.begin(), regQueue_.end());
                     }
                 }
             }   
@@ -246,9 +270,10 @@ vector<Simulation::Customer> Simulation::serveNext() {
 
 /**
  * Output simulation info.
+ * @param num a time integer.
  */
-void Simulation::printInfo() {
-    std::cout << "hello world" << std::endl;
+void Simulation::printInfo(int num) {
+    std::cout << "Finished at: t=" << num << " " << "minutes" << std::endl;
 }
 
 /**

@@ -62,11 +62,6 @@ int main() {
         }
     }
 
-    // FOR TESTING USE
-    // cout << get<0>(customerList[0]) << " " << get<1>(customerList[0]) << " " << get<2>(customerList[0]) << " " << endl;
-    // cout << get<0>(customerList[1]) << " " << get<1>(customerList[1]) << " " << get<2>(customerList[1]) << " " << endl;
-    // cout << numRegister << endl;
-
     Simulation newSim(numRegister, customerList);
     int holdVal = newSim.simulate();
     return 0;
