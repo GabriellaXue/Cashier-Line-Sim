@@ -281,7 +281,7 @@ int Simulation::partition(vector<Simulation::Customer> &toSort, int start, int e
     Simulation::swap(toSort[pivotIdx], toSort[end]);
     int storeIdx = start;
     for (int i = start; i < end; i++) {
-        if (toSort[i].itemNum < pivotVal) {
+        if (toSort[i].itemNum > pivotVal) {
             Simulation::swap(toSort[i], toSort[storeIdx]);
             storeIdx++;
         }

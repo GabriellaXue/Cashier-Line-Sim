@@ -2,4 +2,4 @@ input1  `PASS`
 input2  `PASS`
 input3  `PASS`
 input4  `PASS`
-input5  `FAIL`
+input5  `PASS`
