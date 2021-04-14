@@ -137,24 +137,73 @@ int Simulation::checkTime() {
  */
 void Simulation::processService(list<Simulation::Customer> tmpList) {
     for (auto customer : tmpList) {
-        pair<int, string> bestPos = regQueue_.front();
-        stringstream str(bestPos.second);
+        
+        // check if could pop
+        for (auto it = regMap_.begin(); it != regMap_.end(); it ++) {
+            queue<Customer> toCheck = it->second;
+            if (toCheck.empty()) {
+                continue;
+            }
+            Simulation::Customer currCustomer = toCheck.front();
+            if (currCustomer.arrivalT + currCustomer.processingT <= customer.arrivalT) {
+                toCheck.pop();
+                // update the `regQueue_` as well
+                for (int i = 0; i < regQueue_.size(); i++) {
+                    if (regQueue_[i].second.compare(std::to_string(it->first)) == 0) {
+                        regQueue_[i].first --;
+                    }
+                }
+            }
+        }
+
+        pair<int, string> potentialPos = regQueue_.front();
+        stringstream str(potentialPos.second);
         int toInt = 0;
         str >> toInt;
+        pair<int, string> bestPos;
+
+        // avoid using training register if there are other available ones
+        bool found = false;
+        if (toInt == numRegister_) {
+            int tmp = potentialPos.first;
+            for (auto item : regQueue_) {
+                if (item.first == tmp && item.second.compare(potentialPos.second)) {
+                    bestPos = item;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                bestPos = potentialPos;
+            }
+        } else {
+            bestPos = potentialPos;
+        }
+        stringstream tmpStr(bestPos.second);
+        int tmpInt = 0;
+        tmpStr >> tmpInt;
         if (customer.type.compare("A") == 0) {
-            customer.processingT = (toInt == numRegister_) ? customer.itemNum * 2 : customer.itemNum;
+            customer.processingT = (tmpInt == numRegister_) ? customer.itemNum * 2 : customer.itemNum;
             customer.currReg = bestPos.second;
             customer.waitNum = bestPos.first;
-            regMap_[toInt].push(customer);
-            bestPos.first++;
+            regMap_[tmpInt].push(customer);
+            for (int i = 0; i < regQueue_.size(); i++) {
+                if (regQueue_[i].second.compare(bestPos.second) == 0) {
+                    regQueue_[i].first ++;
+                }
+            }
             sort_heap(regQueue_.begin(), regQueue_.end());
         } else {
             if (bestPos.first == 0) {
-                customer.processingT = (toInt == numRegister_) ? customer.itemNum * 2 : customer.itemNum;
+                customer.processingT = (tmpInt == numRegister_) ? customer.itemNum * 2 : customer.itemNum;
                 customer.currReg = bestPos.second;
                 customer.waitNum = 0;
-                regMap_[toInt].push(customer);
-                bestPos.first++;
+                regMap_[tmpInt].push(customer);
+                for (int i = 0; i < regQueue_.size(); i++) {
+                if (regQueue_[i].second.compare(bestPos.second) == 0) {
+                    regQueue_[i].first ++;
+                }
+            }
                 sort_heap(regQueue_.begin(), regQueue_.end());
             } else {
                 int minItem = 0;
@@ -183,7 +232,6 @@ void Simulation::processService(list<Simulation::Customer> tmpList) {
             }   
         }
     }
-
 }
 
 /**
