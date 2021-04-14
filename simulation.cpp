@@ -22,10 +22,24 @@ using std::queue;
 #include <list>
 using std::list;
 
+#include <algorithm>
+using std::make_heap;
+using std::reverse;
+using std::sort_heap;
+
+#include <utility>
+using std::pair;
+using std::make_pair;
+
+#include <sstream>
+
+#include <map>
+using std::map;
+
 /**
  * Constructs a Simulation with registers number and customer list.
  * Intialize register queue as empty for all the registers.
- * NOTE: register number is zero indexed for register queue.
+ * NOTE: register number is one indexed for register queue.
  * @param numReg number of registers
  * @param customerLs list of customer with format ({customer type}, {time arrive}, {number of items})
  */
@@ -33,8 +47,12 @@ Simulation::Simulation(int numReg, queue< tuple<string, int, int> > customerLs) 
     numRegister_ = numReg;
     customerList_ = customerLs;
     for (int i = 0; i < numRegister_; i++) {
-        regQueue_.push_back(0);
+        regQueue_.push_back(make_pair(0, std::to_string(i+1)));
+        queue<Customer> newQueue;
+        regMap_[i + 1] = newQueue;
     }
+    make_heap(regQueue_.begin(), regQueue_.end());
+    reverse(regQueue_.begin(), regQueue_.end());
 }
 
 /**
@@ -83,14 +101,65 @@ int Simulation::simulate() {
         processService(tmpList);
         tmpList.clear();
     }
+    for (auto it = regMap_.begin(); it != regMap_.end(); it++) {
+        cout << "register number " << it->first << endl;
+        cout << "The queue: " << endl;
+        while(!it->second.empty()) {
+            Simulation::Customer curr = it->second.front(); 
+            cout << curr.type << " " << curr.arrivalT << " " << curr.itemNum << endl;
+            it->second.pop();
+        }
+    }
     return 1;
 }
 
 void Simulation::processService(list<Simulation::Customer> tmpList) {
-    for (auto item : tmpList) {
-        cout << item.type << " " << item.arrivalT << " " << item.itemNum << endl;
+    for (auto customer : tmpList) {
+        pair<int, string> bestPos = regQueue_.front();
+        stringstream str(bestPos.second);
+        int toInt = 0;
+        str >> toInt;
+        if (customer.type.compare("A") == 0) {
+            customer.processingT = (toInt == numRegister_) ? customer.itemNum * 2 : customer.itemNum;
+            customer.currReg = bestPos.second;
+            customer.waitNum = bestPos.first;
+            regMap_[toInt].push(customer);
+            bestPos.first++;
+            sort_heap(regQueue_.begin(), regQueue_.end());
+        } else {
+            if (bestPos.first == 0) {
+                customer.processingT = (toInt == numRegister_) ? customer.itemNum * 2 : customer.itemNum;
+                customer.currReg = bestPos.second;
+                customer.waitNum = 0;
+                regMap_[toInt].push(customer);
+                bestPos.first++;
+            } else {
+                int minItem = 0;
+                int bestLine = numRegister_;
+                for (auto it = regMap_.begin(); it != regMap_.end(); it++) {
+                    Simulation::Customer lastCustomer = it->second.back();
+                    if (lastCustomer.itemNum == minItem) {
+                        if (it->first < bestLine) {
+                            bestLine = it->first;
+                        }
+                    } else if (lastCustomer.itemNum == minItem) {
+                        minItem = lastCustomer.itemNum;
+                        bestLine = it->first;
+                    }
+                }
+                customer.processingT = (bestLine == numRegister_) ? customer.itemNum * 2 : customer.itemNum;
+                customer.currReg = bestLine;
+                customer.waitNum = regMap_[bestLine].size();
+                regMap_[bestLine].push(customer);
+                for (int i = 0; i < regQueue_.size(); i++) {
+                    if (regQueue_[i].second.compare(std::to_string(bestLine)) == 0) {
+                        regQueue_[i].first ++;
+                    }
+                }
+            }   
+        }
     }
-    cout << "ready for the next round" << endl;
+
 }
 
 /**

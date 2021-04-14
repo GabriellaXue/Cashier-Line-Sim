@@ -4,9 +4,15 @@
  */
 
 #pragma once
+
 #include <list>
 using std::list;
 
+#include <utility>
+using std::pair;
+
+#include <map>
+using std::map;
 /** Id for uniquely identify customer */
 static unsigned long uid = 0;
 
@@ -20,8 +26,9 @@ class Simulation {
             string type; // customer type
             int itemNum; // number of items the customer is about to checkout
             int arrivalT; // timestamp the customer arrives
-            int currReg; // which register did the customer go to
+            string currReg; // which register did the customer go to
             int waitNum; // how many people in front of the customer
+            int processingT; // time taken for a customer to check out all the items
             Customer(unsigned long id, string type, int itemNum, int arrivalT)
                 : id(id), type(type), itemNum(itemNum), arrivalT(arrivalT) {}
         };
@@ -38,9 +45,12 @@ class Simulation {
 
         /**
          * Track of the number of customers in each lines.
+         * First object in pair is number of customer,
+         * second object is the register number.
          */
-        vector<int> regQueue_;
+        vector<pair<int, string> > regQueue_;
 
+        map<int, queue<Customer> > regMap_;
         /**
          * Generate unique id for each customer.
          * @return A customer id.
